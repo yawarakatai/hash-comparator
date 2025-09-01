@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ハッシュ計算・比較ツール | Hash Calculator & Comparator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* SFインダストリアル風のカスタムスタイル */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0a;
+            color: #d4d4d4;
+            background-image:
+                linear-gradient(rgba(10, 10, 10, 0.95), rgba(10, 10, 10, 0.95)),
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231a1a1a' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* スクロールバーのスタイル */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4a4a4a;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00f2ea;
+        }
+
+        /* カスタムUI要素のスタイル */
+        .sci-fi-container {
+            background-color: rgba(10, 10, 10, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid #2a2a2a;
+        }
+
+        .sci-fi-button {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .sci-fi-button:hover {
+            color: #00f2ea;
+            border-color: #00f2ea;
+            box-shadow: 0 0 15px rgba(0, 242, 234, 0.5);
+        }
+
+        .sci-fi-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        .file-drop-area.dragover {
+            border-color: #00f2ea;
+            background-color: rgba(0, 242, 234, 0.05);
+        }
+        
+        .hash-match {
+            background-color: rgba(0, 242, 234, 0.1);
+            border-left-color: #00f2ea;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 sm:p-6 lg:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <!-- ヘッダー -->
+        <header class="text-center mb-8">
+            <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-widest text-white">
+                HASH CALCULATOR & COMPARATOR
+            </h1>
+            <p class="text-xs sm:text-sm text-neutral-400 mt-2 tracking-wider">
+                任意のファイル（複数）をアップロードし、ハッシュ値を計算・比較します。
+            </p>
+        </header>
+
+        <!-- メインコンテンツ -->
+        <main class="sci-fi-container rounded-lg shadow-2xl p-4 sm:p-6">
+            <!-- コントロールパネル -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="md:col-span-2">
+                    <label for="file-upload" class="block text-xs font-bold uppercase tracking-wider text-neutral-400 mb-2">
+                        STEP 1: ファイルを選択またはドラッグ＆ドロップ
+                    </label>
+                    <div id="file-drop-area" class="file-drop-area flex justify-center items-center w-full h-32 px-6 border-2 border-dashed border-neutral-600 rounded-md cursor-pointer transition-colors duration-300 hover:border-cyan-400 hover:bg-neutral-900">
+                        <div class="text-center">
+                            <svg class="mx-auto h-8 w-8 text-neutral-500" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true"><path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                            <p class="mt-1 text-sm text-neutral-400">
+                                <span class="font-semibold text-cyan-400">クリックしてファイルを選択</span>
+                            </p>
+                             <p class="text-xs text-neutral-500" id="file-info">またはドラッグ＆ドロップ</p>
+                        </div>
+                        <input id="file-upload" name="file-upload" type="file" class="sr-only" multiple>
+                    </div>
+                </div>
+                <div>
+                    <label for="algorithm-select" class="block text-xs font-bold uppercase tracking-wider text-neutral-400 mb-2">
+                        STEP 2: アルゴリズム
+                    </label>
+                    <select id="algorithm-select" class="sci-fi-select block w-full bg-neutral-800 border border-neutral-600 rounded-md py-2 px-3 text-sm text-neutral-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-neutral-900 focus:ring-cyan-400 focus:border-cyan-400">
+                        <option value="SHA-256">SHA-256 (推奨)</option>
+                        <option value="SHA-512">SHA-512</option>
+                        <option value="SHA-1">SHA-1 (非推奨)</option>
+                    </select>
+                </div>
+                <div class="md:col-span-3">
+                    <label for="compare-hash-input" class="block text-xs font-bold uppercase tracking-wider text-neutral-400 mb-2">
+                        STEP 3 (OPTIONAL): 比較するハッシュ値を入力 (1行に1つ)
+                    </label>
+                    <textarea id="compare-hash-input" placeholder="比較したいハッシュ値を改行で区切って入力..." rows="4" class="w-full bg-neutral-800 border border-neutral-600 rounded-md py-2 px-3 text-sm text-neutral-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-neutral-900 focus:ring-cyan-400 focus:border-cyan-400 font-mono"></textarea>
+                </div>
+            </div>
+
+            <!-- 結果表示エリア -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-3">
+                        計算結果
+                    </h2>
+                    <div id="results-container" class="w-full h-96 bg-neutral-900/50 border border-neutral-800 rounded-md p-2 overflow-y-auto">
+                        <div id="placeholder" class="flex items-center justify-center h-full">
+                            <p class="text-neutral-500 text-sm">ファイルを選択すると、ここに結果が表示されます。</p>
+                        </div>
+                        <!-- 結果はここに動的に挿入されます -->
+                    </div>
+                </div>
+                <div>
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-3">
+                        比較結果
+                    </h2>
+                    <div id="comparison-container" class="w-full h-96 bg-neutral-900/50 border border-neutral-800 rounded-md p-2 overflow-y-auto">
+                         <div id="comparison-placeholder" class="flex items-center justify-center h-full">
+                            <p class="text-neutral-500 text-sm">一致するハッシュがここに表示されます。</p>
+                        </div>
+                        <!-- 比較結果はここに動的に挿入されます -->
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- フッター -->
+        <footer class="text-center mt-8">
+            <p class="text-xs text-neutral-600">&copy; 2024. All systems operational.</p>
+        </footer>
+    </div>
+
+    <script>
+        const fileUploadInput = document.getElementById('file-upload');
+        const fileDropArea = document.getElementById('file-drop-area');
+        const fileInfo = document.getElementById('file-info');
+        const algorithmSelect = document.getElementById('algorithm-select');
+        const resultsContainer = document.getElementById('results-container');
+        const placeholder = document.getElementById('placeholder');
+        const compareHashInput = document.getElementById('compare-hash-input');
+        const comparisonContainer = document.getElementById('comparison-container');
+        const comparisonPlaceholder = document.getElementById('comparison-placeholder');
+
+        let fileList = [];
+
+        // ファイル選択またはアルゴリズム変更で処理を開始
+        fileUploadInput.addEventListener('change', handleFileSelect);
+        algorithmSelect.addEventListener('change', processFiles);
+        compareHashInput.addEventListener('input', updateComparisons);
+        
+        // ドラッグ＆ドロップのイベントリスナー
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileDropArea.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileDropArea.addEventListener(eventName, () => fileDropArea.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileDropArea.addEventListener(eventName, () => fileDropArea.classList.remove('dragover'), false);
+        });
+
+        fileDropArea.addEventListener('drop', handleDrop, false);
+
+        // ファイルドロップエリアのクリックでファイル選択ダイアログを開く
+        fileDropArea.addEventListener('click', () => fileUploadInput.click());
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFileSelect({ target: { files } });
+        }
+        
+        function handleFileSelect(event) {
+            fileList = Array.from(event.target.files);
+            if (fileList.length > 0) {
+                fileInfo.textContent = `${fileList.length}個のファイルを選択中`;
+            } else {
+                fileInfo.textContent = 'またはドラッグ＆ドロップ';
+            }
+            processFiles();
+        }
+
+        async function processFiles() {
+            if (fileList.length === 0) {
+                resultsContainer.innerHTML = '';
+                placeholder.style.display = 'flex';
+                resultsContainer.appendChild(placeholder);
+                updateComparisons();
+                return;
+            }
+
+            placeholder.style.display = 'none';
+            resultsContainer.innerHTML = '<div id="loading" class="flex items-center justify-center h-full"><p class="text-cyan-400 animate-pulse">ハッシュ値を計算中...</p></div>';
+
+            const algorithm = algorithmSelect.value;
+            const promises = fileList.map(file => calculateHash(file, algorithm));
+
+            try {
+                const results = await Promise.all(promises);
+                displayResults(results);
+                updateComparisons();
+            } catch (error) {
+                console.error('ハッシュ計算中にエラーが発生しました:', error);
+                resultsContainer.innerHTML = `<p class="text-red-500 text-sm p-4">エラーが発生しました: ${error.message}</p>`;
+            }
+        }
+
+        function calculateHash(file, algorithm) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const buffer = e.target.result;
+                        const hashBuffer = await crypto.subtle.digest(algorithm, buffer);
+                        const hashArray = Array.from(new Uint8Array(hashBuffer));
+                        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                        resolve({
+                            name: file.name,
+                            size: file.size,
+                            algorithm: algorithm,
+                            hash: hashHex
+                        });
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                reader.onerror = (error) => reject(error);
+                reader.readAsArrayBuffer(file);
+            });
+        }
+        
+        function displayResults(results) {
+            resultsContainer.innerHTML = '';
+            results.forEach(result => {
+                const resultElement = document.createElement('div');
+                resultElement.className = 'result-item border-l-4 border-neutral-700 bg-neutral-800/50 p-3 mb-2 rounded-r-md text-xs transition-all duration-300';
+                resultElement.setAttribute('data-hash', result.hash);
+                
+                const formattedSize = (size) => {
+                    if (size < 1024) return `${size} Bytes`;
+                    if (size < 1024 * 1024) return `${(size / 1024).toFixed(2)} KB`;
+                    return `${(size / (1024 * 1024)).toFixed(2)} MB`;
+                };
+
+                resultElement.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex-grow mr-4">
+                            <p class="font-bold text-sm text-neutral-200 break-all">${result.name}</p>
+                            <p class="text-neutral-400">${result.algorithm} / ${formattedSize(result.size)}</p>
+                        </div>
+                        <button class="copy-btn text-neutral-500 hover:text-cyan-400 transition-colors p-1" title="ハッシュ値をコピー">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                             <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+                             <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zM-1 7a.5.5 0 0 1 .5-.5h15a.5.5 0 0 1 0 1h-15A.5.5 0 0 1-1 7z"/>
+                           </svg>
+                        </button>
+                    </div>
+                    <div class="bg-black/30 p-2 rounded font-mono break-all text-neutral-300 text-xs">
+                        ${result.hash}
+                    </div>
+                `;
+                resultsContainer.appendChild(resultElement);
+            });
+            
+            // コピーボタンにイベントリスナーを追加
+            document.querySelectorAll('.copy-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const resultItem = button.closest('.result-item');
+                    const hash = resultItem.dataset.hash;
+                    
+                    // document.execCommandは非推奨ですが、iframe環境でのクリップボードAPIの制約を回避するために使用
+                    const textarea = document.createElement('textarea');
+                    textarea.value = hash;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    try {
+                        document.execCommand('copy');
+                        button.title = "コピーしました！";
+                        // SVGをチェックマークに変更
+                        button.innerHTML = `
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="text-green-400" viewBox="0 0 16 16">
+                            <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022z"/>
+                          </svg>`;
+                    } catch (err) {
+                        button.title = "コピーに失敗しました";
+                        console.error('コピーに失敗:', err);
+                    }
+                    document.body.removeChild(textarea);
+
+                    setTimeout(() => {
+                        button.title = "ハッシュ値をコピー";
+                        // SVGを元に戻す
+                        button.innerHTML = `
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                             <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+                             <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zM-1 7a.5.5 0 0 1 .5-.5h15a.5.5 0 0 1 0 1h-15A.5.5 0 0 1-1 7z"/>
+                          </svg>`;
+                    }, 2000);
+                });
+            });
+        }
+
+        function updateComparisons() {
+            const resultItems = document.querySelectorAll('.result-item');
+            const userHashes = compareHashInput.value.trim().toLowerCase().split('\n').map(h => h.trim()).filter(h => h.length > 0);
+
+            // 1. Collect all calculated hashes and their corresponding file names
+            const calculatedHashes = new Map(); // Map<hash, string[]>
+            resultItems.forEach(item => {
+                const hash = item.dataset.hash;
+                const fileName = item.querySelector('.font-bold').textContent;
+                if (!calculatedHashes.has(hash)) {
+                    calculatedHashes.set(hash, []);
+                }
+                calculatedHashes.get(hash).push(fileName);
+            });
+
+            // 2. Identify matches (duplicates within files, or matches with user input)
+            const matches = new Map(); // Map<hash, { reason: string, files: string[] }>
+            for (const [hash, files] of calculatedHashes.entries()) {
+                const isDuplicate = files.length > 1;
+                const isUserMatch = userHashes.includes(hash);
+
+                if (isDuplicate && isUserMatch) {
+                    matches.set(hash, { reason: 'ファイル間および入力とハッシュが一致', files });
+                } else if (isDuplicate) {
+                    matches.set(hash, { reason: 'ファイル間でハッシュが一致', files });
+                } else if (isUserMatch) {
+                    matches.set(hash, { reason: '入力とハッシュが一致', files });
+                }
+            }
+
+            // 3. Highlight items in the main results list
+            resultItems.forEach(item => {
+                const fileHash = item.dataset.hash;
+                if (matches.has(fileHash)) {
+                    item.classList.add('hash-match');
+                } else {
+                    item.classList.remove('hash-match');
+                }
+            });
+
+            // 4. Populate the comparison results panel
+            if (matches.size > 0) {
+                comparisonPlaceholder.style.display = 'none';
+                comparisonContainer.innerHTML = '';
+                
+                for (const [hash, data] of matches.entries()) {
+                    const matchElement = document.createElement('div');
+                    matchElement.className = 'border-l-4 border-cyan-400 bg-neutral-800/50 p-3 mb-2 rounded-r-md text-xs';
+                    
+                    const filesHtml = data.files.map(name => `<li class="break-all">${name}</li>`).join('');
+
+                    matchElement.innerHTML = `
+                        <p class="text-cyan-400 text-xs font-bold mb-2">${data.reason}</p>
+                        <div class="bg-black/30 p-2 rounded font-mono break-all text-neutral-300 text-xs mb-2">
+                            ${hash}
+                        </div>
+                        <p class="text-neutral-400 mb-1">対象ファイル:</p>
+                        <ul class="list-disc list-inside text-neutral-300 pl-2">
+                            ${filesHtml}
+                        </ul>
+                    `;
+                    comparisonContainer.appendChild(matchElement);
+                }
+            } else {
+                comparisonPlaceholder.style.display = 'flex';
+                comparisonContainer.innerHTML = '';
+                comparisonContainer.appendChild(comparisonPlaceholder);
+            }
+        }
+    </script>
+</body>
+</html>
+
+
