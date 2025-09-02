@@ -387,7 +387,7 @@
 
         function updateComparisons() {
             const resultItems = document.querySelectorAll('.result-item');
-            const userHashes = compareHashInput.value.trim().toLowerCase().split('').map(h => h.trim()).filter(h => h.length > 0);
+            const userHashes = compareHashInput.value.trim().toLowerCase().split('\n').map(h => h.trim()).filter(h => h.length > 0);
 
             // 1. Collect all calculated hashes and their corresponding file names
             const calculatedHashes = new Map(); // Map<hash, string[]>
